@@ -1,54 +1,71 @@
 using System.Text.Json.Serialization;
 using MinimalApi.Validation;
 using ValidationSourceGeneration.ViewModels;
+using ValidationSourceGeneration.ViewModels.FF;
 
-var builder = WebApplication.CreateSlimBuilder(args);
-
-builder.Services.ConfigureHttpJsonOptions(options =>
+internal class Program
 {
-    options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-});
+    private static void Main(string[] args)
+    {
+        var builder = WebApplication.CreateSlimBuilder(args);
 
-builder.Services.AddAutoValidation();
-
-//builder.Services.RegisterAllValidators();
-
-var app = builder.Build();
-
-var sampleTodos = new Todo[]
-{
-    new(1, "Walk the dog"),
-    new(2, "Do the dishes", DateOnly.FromDateTime(DateTime.Now)),
-    new(3, "Do the laundry", DateOnly.FromDateTime(DateTime.Now.AddDays(1))),
-    new(4, "Clean the bathroom"),
-    new(5, "Clean the car", DateOnly.FromDateTime(DateTime.Now.AddDays(2))),
-};
-
-var todosApi = app.MapGroup("/todos");
-todosApi.MapGet("/", () => sampleTodos);
-todosApi.MapGet(
-    "/{id}",
-    (int id) =>
-        sampleTodos.FirstOrDefault(a => a.Id == id) is { } todo
-            ? Results.Ok(todo)
-            : Results.NotFound()
-);
-
-todosApi
-    .MapPost(
-        "/person",
-        (Person p) =>
+        builder.Services.ConfigureHttpJsonOptions(options =>
         {
-            return Results.Ok(p);
-        }
-    )
-    .AddValidationFilter();
+            options.SerializerOptions.TypeInfoResolverChain.Insert(
+                0,
+                AppJsonSerializerContext.Default
+            );
+        });
 
-app.Run();
+        builder.Services.RegisterAllValidators();
+        builder.Services.AddAutoValidation();
 
-public record Todo(int Id, string? Title, DateOnly? DueBy = null, bool IsComplete = false);
+        var app = builder.Build();
+
+        var v = app.MapGroup("/test").AddValidationFilter();
+        v.MapPost(
+                "/person",
+                (Person p) =>
+                {
+                    return Results.Ok(p);
+                }
+            )
+            .AddValidationFilter();
+
+        v.MapPost(
+                "/dog",
+                (Dog p) =>
+                {
+                    return Results.Ok(p);
+                }
+            )
+            .AddValidationFilter();
+
+        //v.MapPost(
+        //        "/cat",
+        //        (ValidationSourceGeneration.Models.Cat p) =>
+        //        {
+        //            return Results.Ok(p);
+        //        }
+        //    )
+        //    .AddValidationFilter();
+
+        v.MapPost(
+                "/cat1",
+                (ValidationSourceGeneration.ViewModels.BB.Cat p) =>
+                {
+                    return Results.Ok(p);
+                }
+            )
+            .AddValidationFilter();
+
+        app.Run();
+    }
+}
 
 [JsonSerializable(typeof(Dictionary<string, string[]>))]
 [JsonSerializable(typeof(Person))]
-[JsonSerializable(typeof(Todo[]))]
+[JsonSerializable(typeof(Dog))]
+[JsonSerializable(typeof(ValidationSourceGeneration.ViewModels.BB.Cat))]
+[JsonSerializable(typeof(ValidationSourceGeneration.Models.Cat))]
 internal partial class AppJsonSerializerContext : JsonSerializerContext { }

@@ -34,13 +34,23 @@ internal class ValidationFilter : IEndpointFilter
 
                 if (!validationResult.IsValid)
                 {
-                    var validationFilterConfiguration = services.GetRequiredService<
+                    var validationFilterConfiguration = services.GetService<
                         IOptions<ValidationFilterConfiguration>
                     >();
-                    return validationFilterConfiguration.Value.ValidationResultCreator(
-                        validationResult,
-                        context.HttpContext
-                    );
+                    if (validationFilterConfiguration != null)
+                    {
+                        return validationFilterConfiguration.Value.ValidationResultCreator(
+                            validationResult,
+                            context.HttpContext
+                        );
+                    }
+                    else
+                    {
+                        return ValidationFilterConfiguration.CreateDefaultUnInvalideHttpResult(
+                            validationResult,
+                            context.HttpContext
+                        );
+                    }
                 }
             }
         }
@@ -70,13 +80,23 @@ internal class ValidationFilter<T> : IEndpointFilter
 
                 if (!validationResult.IsValid)
                 {
-                    var validationFilterConfiguration = services.GetRequiredService<
+                    var validationFilterConfiguration = services.GetService<
                         IOptions<ValidationFilterConfiguration>
                     >();
-                    return validationFilterConfiguration.Value.ValidationResultCreator(
-                        validationResult,
-                        context.HttpContext
-                    );
+                    if (validationFilterConfiguration != null)
+                    {
+                        return validationFilterConfiguration.Value.ValidationResultCreator(
+                            validationResult,
+                            context.HttpContext
+                        );
+                    }
+                    else
+                    {
+                        return ValidationFilterConfiguration.CreateDefaultUnInvalideHttpResult(
+                            validationResult,
+                            context.HttpContext
+                        );
+                    }
                 }
             }
         }

@@ -1,19 +1,35 @@
 @ValidationSourceGeneration_HostAddress = http://localhost:5265
 
-GET {{ValidationSourceGeneration_HostAddress}}/todos/
-Accept: application/json
-
-###
-
-GET {{ValidationSourceGeneration_HostAddress}}/todos/1
-Accept: application/json
-
-###
-
-POST {{ValidationSourceGeneration_HostAddress}}/todos/person
+POST {{ValidationSourceGeneration_HostAddress}}/test/person
 Content-Type : application/json
 
 {
   "name" : "wang",
   "age" : -1
+}
+
+###
+
+POST {{ValidationSourceGeneration_HostAddress}}/test/dog
+Content-Type : application/json
+
+{
+  "name" : "wang"
+}
+
+###
+
+POST {{ValidationSourceGeneration_HostAddress}}/test/cat
+Content-Type : application/json
+
+{
+  "name" : "wang"
+}
+###
+
+POST {{ValidationSourceGeneration_HostAddress}}/test/cat1
+Content-Type : application/json
+
+{
+  "name" : "wang"
 }
