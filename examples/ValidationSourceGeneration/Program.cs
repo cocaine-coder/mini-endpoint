@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using MinimalApi.Validation;
+using ValidationSourceGeneration.ViewModels;
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
@@ -8,7 +9,9 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
 });
 
-builder.Services.RegisterAllValidators();
+builder.Services.AddAutoValidation();
+
+//builder.Services.RegisterAllValidators();
 
 var app = builder.Build();
 
@@ -31,9 +34,21 @@ todosApi.MapGet(
             : Results.NotFound()
 );
 
+todosApi
+    .MapPost(
+        "/person",
+        (Person p) =>
+        {
+            return Results.Ok(p);
+        }
+    )
+    .AddValidationFilter();
+
 app.Run();
 
 public record Todo(int Id, string? Title, DateOnly? DueBy = null, bool IsComplete = false);
 
+[JsonSerializable(typeof(Dictionary<string, string[]>))]
+[JsonSerializable(typeof(Person))]
 [JsonSerializable(typeof(Todo[]))]
 internal partial class AppJsonSerializerContext : JsonSerializerContext { }

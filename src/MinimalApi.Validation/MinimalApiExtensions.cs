@@ -9,13 +9,12 @@ public static partial class ServiceCollectionExtensions
 {
     public static IServiceCollection AddAutoValidation(
         this IServiceCollection services,
-        Action<ValidationFilterConfiguration>? configurationBuilder
+        Action<ValidationFilterConfiguration>? configurationBuilder = default
     )
     {
-        var config = new ValidationFilterConfiguration();
-        configurationBuilder?.Invoke(config);
-
-        services.ConfigureOptions(config);
+        services.Configure<ValidationFilterConfiguration>(config =>
+            configurationBuilder?.Invoke(config)
+        );
         return services;
     }
 }

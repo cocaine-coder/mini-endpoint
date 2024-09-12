@@ -1,8 +1,5 @@
 ﻿using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
 using System.Text;
-using FluentValidation;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -13,6 +10,43 @@ namespace MinimalApi.Validation.SourceGeneration;
 [Generator]
 public class ValidatorRegisterSourceGenerator : IIncrementalGenerator
 {
+    string RegisterCode = "";
+
+    void SearchInMember(MemberDeclarationSyntax member, string currentPath)
+    {
+        if (member is ClassDeclarationSyntax classSyntax)
+        {
+            var baseList = classSyntax.BaseList;
+            if (baseList != null)
+            {
+                foreach (var baseType in baseList.Types)
+                {
+                    if (
+                        baseType.Type is GenericNameSyntax genericNameSyntax
+                        && genericNameSyntax.Identifier.Text == "AbstractValidator"
+                    )
+                    {
+                        var argument = genericNameSyntax.TypeArgumentList.Arguments[0];
+
+                        var validateTarget = argument.ToString();
+                        var validator = classSyntax.Identifier.Text;
+
+                        RegisterCode +=
+                            $"services.AddScoped(IValidator<{validateTarget}, {currentPath + "." + validator}>);\n";
+                    }
+                }
+            }
+            else
+            {
+                // class嵌套
+                foreach (var item in classSyntax.Members)
+                {
+                    SearchInMember(item, $"${currentPath}.{classSyntax.Identifier.Text}");
+                }
+            }
+        }
+    }
+
     void IIncrementalGenerator.Initialize(IncrementalGeneratorInitializationContext context)
     {
         Debugger.Launch();
@@ -22,30 +56,18 @@ public class ValidatorRegisterSourceGenerator : IIncrementalGenerator
             compilation,
             (ctx, c) =>
             {
-                var registerCode = "global::System.Console.WriteLine(123);";
-
+                // 寻找继承AbstractValidator<T>的类
                 foreach (var tree in c.SyntaxTrees)
                 {
                     var root = tree.GetCompilationUnitRoot();
 
                     foreach (var member in root.Members)
                     {
-                        if (member is ClassDeclarationSyntax classSyntax)
+                        if (member is BaseNamespaceDeclarationSyntax namespaceDeclaration)
                         {
-                            var baseList = classSyntax.BaseList;
-                        }
-
-                        if (
-                            member
-                            is FileScopedNamespaceDeclarationSyntax fileScopedNamespaceDeclarationSyntax
-                        )
-                        {
-                            foreach (var member1 in fileScopedNamespaceDeclarationSyntax.Members)
+                            foreach (var item in namespaceDeclaration.Members)
                             {
-                                if (member1 is ClassDeclarationSyntax classSyntax1)
-                                {
-                                    var baseList = classSyntax1.BaseList;
-                                }
+                                SearchInMember(item, namespaceDeclaration.Name.ToString());
                             }
                         }
                     }
@@ -61,7 +83,7 @@ public class ValidatorRegisterSourceGenerator : IIncrementalGenerator
                     {
                         public static void RegisterAllValidators(this IServiceCollection services)
                         {
-                            {{registerCode}}
+                            {{RegisterCode}}
                         }
                     }
                 }

@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 
-namespace ValidationSourceGeneration;
+namespace ValidationSourceGeneration.ViewModels;
 
 public record Person(string Name, int Age);
 

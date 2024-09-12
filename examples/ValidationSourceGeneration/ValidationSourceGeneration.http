@@ -9,3 +9,11 @@ GET {{ValidationSourceGeneration_HostAddress}}/todos/1
 Accept: application/json
 
 ###
+
+POST {{ValidationSourceGeneration_HostAddress}}/todos/person
+Content-Type : application/json
+
+{
+  "name" : "wang",
+  "age" : -1
+}
